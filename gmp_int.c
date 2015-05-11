@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 extern	void	*MR_GC_malloc(size_t num_bytes);
 extern	void	*MR_GC_realloc(void *ptr, size_t num_bytes);
 extern	void	*GC_free(void *ptr);
