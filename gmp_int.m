@@ -57,7 +57,7 @@
 
 :- implementation.
 
-:- import_module require.
+:- import_module exception, math, require.
 
    % Type declaration for foreign type gmp_int*.
    %
@@ -353,8 +353,18 @@ abs(A) = B :- gmp_abs(A, B).
 ").
 
 pow(A, N) = Res :-
-    ( is_even(N) ->
-        SQ = pow(A, N // two),
+    ( N < zero ->
+        throw(math.domain_error("gmp_int.pow: cannot handle negative exponent"))
+    ;
+        Res = pow2(A, N)
+    ).
+
+:- func pow2(gmp_int, gmp_int) = gmp_int.
+pow2(A, N) = Res :-
+    ( is_zero(N) ->
+        Res = one
+    ; is_even(N) ->
+        SQ = pow2(A, N // two),
         Res = SQ * SQ
     ;
         Res = N * pow(A, N - one)
