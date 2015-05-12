@@ -35,6 +35,16 @@ should work.
    $ mmc --link-object libgmp.{a,so} --link-object gmp_int.o $OPTIONS $PROGRAM_NAME
    ```
 
+## Benchmark
+
+For heavy number crunching code on bignums, first benchmarks show that
+Mercury-GMP is 2x faster than SWI and 15% faster than YAP (both using
+GMP).
+
+For a Miller-Rabin test, Mercury-GMP was more than two orders of magnitude
+faster than using `integer.m` from the standard library. It is roughly 3 times
+faster than Mercury-MP which is based on [libtommath](http://libtom.net).
+
 ## Remarks
 
 This only works in the C grades (hlc / asm_fast) with conservative garbage
