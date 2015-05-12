@@ -42,8 +42,8 @@ Mercury-GMP is 2x faster than SWI and 15% faster than YAP (both using
 GMP).
 
 For a Miller-Rabin test, Mercury-GMP was more than two orders of magnitude
-faster than using `integer.m` from the standard library. It is roughly 3 times
-faster than Mercury-MP which is based on [libtommath](http://libtom.net).
+faster than using `integer.m` from the standard library. It is between 2 to 6
+times faster than Mercury-MP which is based on [libtommath](http://libtom.net).
 
 ## Remarks
 
