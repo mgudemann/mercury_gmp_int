@@ -1,5 +1,5 @@
 # mercury_gmp_int
-Multi precision integers for Mercury based on GMP
+Multi-precision integers for Mercury based on GMP
 
 This provides a binding to a subset of the functions from the `mpz` data-type of
 [GMP](http://gmplib.org).
@@ -17,9 +17,9 @@ should work.
    $ gcc -c gmp_int.c
    ```
 
-2. call the _impure_ GMP `gmp_initialize/0` predicate in your program,
+2. ~~call the _impure_ GMP `gmp_initialize/0` predicate in your program,
    preferable as very first predicate in `main/1`. This sets up GMP with the
-   Mercury GC interface.
+   Mercury GC interface.~~
 
    ```
    :- impure pred main(io::di, io::uo) is det.
@@ -28,6 +28,10 @@ should work.
        impure gmp_initialize,
           ...
    ```
+
+   **Update** This is unnecessary, as Mercury allows to declare an explicit
+   module initialise call (see
+   [language reference](http://mercurylang.org/information/doc-release/mercury_ref/Module-initialisation.html#Module-initialisation))
 
 3. compile your program and link to the library and `gmp_int.o`
 
