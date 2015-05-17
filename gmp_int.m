@@ -6,7 +6,6 @@
 
 :- type gmp_int.
 
-:- impure pred gmp_initialize is det.
 
 :- pred equal(gmp_int::in, gmp_int::in) is semidet.
 :- pred cmp(comparison_result::uo, gmp_int::in, gmp_int::in) is det.
@@ -69,6 +68,9 @@
 #include \"gmp.h\"\n\
 #include \"gmp_int.h\"
 ").
+
+:- initialise gmp_initialize/0.
+:- impure pred gmp_initialize is det.
 
 :- pragma foreign_proc("C",
                       gmp_initialize,

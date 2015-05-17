@@ -4,14 +4,13 @@
 
 :- import_module io.
 
-:- impure pred main(io::di, io::uo) is det.
+:- pred main(io::di, io::uo) is det.
 
 :- implementation.
 
 :- import_module gmp_int, list, string.
 
 main(!IO) :-
-    impure gmp_initialize,
     A = gmp_int(-10),
     B = gmp_int(3),
     C = A * B,
