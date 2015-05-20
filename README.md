@@ -36,7 +36,7 @@ should work.
 3. compile your program and link to the library and `gmp_int.o`
 
    ```
-   $ mmc --link-object $FULL_PATH_TO_YOUR_LIBGMP --link-object gmp_int.o $OPTIONS $PROGRAM_NAME
+   $ mmc -l gmp --link-object gmp_int.o $OPTIONS $PROGRAM_NAME
    ```
 
 ## Benchmark
