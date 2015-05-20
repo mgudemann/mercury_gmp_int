@@ -65,7 +65,7 @@
 :- pragma foreign_decl("C",
 "\
 #include <stdio.h>\n\
-#include \"gmp.h\"\n\
+#include <gmp.h>\n\
 #include \"gmp_int.h\"
 ").
 
