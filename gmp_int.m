@@ -66,12 +66,37 @@
 "\
 #include <stdio.h>\n\
 #include <gmp.h>\n\
-#include \"gmp_int.h\"
 ").
 
 :- initialise gmp_initialize/0.
 :- impure pred gmp_initialize is det.
 
+:- pragma foreign_code("C",
+"
+#include <stdlib.h>
+
+void* gmp_int_alloc_function(size_t);
+void* gmp_int_realloc_function(void*, size_t, size_t);
+void  gmp_int_free_function(void*, size_t);
+
+void *
+gmp_int_alloc_function(size_t size)
+{
+  return MR_GC_malloc(size);
+}
+
+void *
+gmp_int_realloc_function(void* ptr, size_t size, size_t new_size)
+{
+  return MR_GC_realloc(ptr, new_size);
+}
+
+void
+gmp_int_free_function(void* ptr, size_t size)
+{
+  GC_free(ptr);
+}
+").
 
 :- pragma foreign_decl("C", local,
 "
