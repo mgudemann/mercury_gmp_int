@@ -75,10 +75,6 @@
 "
 #include <stdlib.h>
 
-void* gmp_int_alloc_function(size_t);
-void* gmp_int_realloc_function(void*, size_t, size_t);
-void  gmp_int_free_function(void*, size_t);
-
 void *
 gmp_int_alloc_function(size_t size)
 {
@@ -100,6 +96,10 @@ gmp_int_free_function(void* ptr, size_t size)
 
 :- pragma foreign_decl("C", local,
 "
+void* gmp_int_alloc_function(size_t);
+void* gmp_int_realloc_function(void*, size_t, size_t);
+void  gmp_int_free_function(void*, size_t);
+
 static mpz_t constant_negative_one;
 static mpz_t constant_zero;
 static mpz_t constant_one;
