@@ -9,13 +9,16 @@ This provides a binding to a subset of the functions from the `mpz` data-type of
 To use, you'll need a compiled version of GMP, both shared and static libraries
 should work.
 
-1. compile `gmp_int.c` which interfaces to Mercury's version of the
+1. ~~compile `gmp_int.c` which interfaces to Mercury's version of the
    Boehm-Demers-Weiser garbage collector. This will provide a linkable object
-   file called `gmp_int.o`.
+   file called `gmp_int.o`.~~
 
    ```
    $ gcc -c gmp_int.c
    ```
+
+   **Update** This is no longer required, the code and the prototype
+     declarations are directly in `gmp_int.m` now.
 
 2. ~~call the _impure_ GMP `gmp_initialize/0` predicate in your program,
    preferable as very first predicate in `main/1`. This sets up GMP with the
@@ -33,10 +36,16 @@ should work.
    module initialise call (see
    [language reference](http://mercurylang.org/information/doc-release/mercury_ref/Module-initialisation.html#Module-initialisation))
 
-3. compile your program and link to the library and `gmp_int.o`
+3. compile your program and link to the library:
 
    ```
-   $ mmc -l gmp --link-object gmp_int.o $OPTIONS $PROGRAM_NAME
+   $ mmc -l gmp $OPTIONS $PROGRAM_NAME
+   ```
+
+   or as follows if you want to use static linking (slightly faster):
+
+   ```
+   $ mmc --link-object $FULL_PATH_TO_STATIC_GMP_LIB $OPTIONS $PROGRAM_NAME
    ```
 
 ## Benchmark
