@@ -72,6 +72,16 @@
 :- initialise gmp_initialize/0.
 :- impure pred gmp_initialize is det.
 
+
+:- pragma foreign_decl("C", local,
+"
+static mpz_t constant_negative_one;
+static mpz_t constant_zero;
+static mpz_t constant_one;
+static mpz_t constant_two;
+static mpz_t constant_ten;
+").
+
 :- pragma foreign_proc("C",
                       gmp_initialize,
                       [will_not_call_mercury, thread_safe],
@@ -79,6 +89,11 @@
   mp_set_memory_functions(&gmp_int_alloc_function,
                           &gmp_int_realloc_function,
                           &gmp_int_free_function);
+  mpz_init_set_si(constant_negative_one, -1);
+  mpz_init_set_si(constant_zero, 0);
+  mpz_init_set_si(constant_one, 1);
+  mpz_init_set_si(constant_two, 2);
+  mpz_init_set_si(constant_ten, 10);
 ").
 
 gmp_int(Value) = Res :- gmp_init(Value, Res).
@@ -372,10 +387,44 @@ pow2(A, N) = Res :-
         Res = N * pow(A, N - one)
     ).
 
-negative_one = gmp_int(-10).
-zero         = gmp_int(0).
-one          = gmp_int(1).
-two          = gmp_int(2).
-ten          = gmp_int(10).
+:- pragma foreign_proc("C",
+    negative_one = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_negative_one;
+"
+).
+
+:- pragma foreign_proc("C",
+    zero = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_zero;
+"
+).
+
+:- pragma foreign_proc("C",
+    one = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_one;
+"
+).
+
+:- pragma foreign_proc("C",
+    two = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_two;
+"
+).
+
+:- pragma foreign_proc("C",
+    ten = (Res::out),
+    [will_not_call_mercury, promise_pure, thread_safe],
+"
+  Res = &constant_ten;
+"
+).
 
 :- end_module gmp_int.
