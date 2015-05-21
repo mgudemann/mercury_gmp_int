@@ -43,6 +43,10 @@
 :- func abs(gmp_int) = gmp_int.
 :- func pow(gmp_int, gmp_int) = gmp_int.
 
+    % powm(Base, Exp, M) = Base^Exp mod M
+    %
+:- func powm(gmp_int, gmp_int, gmp_int) = gmp_int.
+
 :- func det_from_string(string) = gmp_int.
 :- func det_from_base_string(string, int) = gmp_int.
 :- func to_string(gmp_int) = string.
@@ -395,7 +399,7 @@ abs(A) = B :- gmp_abs(A, B).
 ").
 
 pow(A, N) = Res :-
-    ( N < zero ->
+    ( is_negative(N) ->
         throw(math.domain_error("gmp_int.pow: cannot handle negative exponent"))
     ;
         Res = pow2(A, N)
@@ -409,8 +413,19 @@ pow2(A, N) = Res :-
         SQ = pow2(A, N // two),
         Res = SQ * SQ
     ;
-        Res = N * pow(A, N - one)
+        Res = A * pow2(A, N - one)
     ).
+
+:- pragma foreign_proc("C",
+                      powm(Base::in, Exp::in, Mod::in) = (Res::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  mpz_t *result;
+  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*result);
+  mpz_powm(*result, *Base, *Exp, *Mod);
+  Res = result;
+").
 
 :- pragma foreign_proc("C",
     negative_one = (Res::out),
