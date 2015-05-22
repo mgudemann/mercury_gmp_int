@@ -180,17 +180,12 @@ equal(A, B) :- cmp((=), A, B).
 "
   int res;
   res = mpz_cmp(*A, *B);
-  switch(res) {
-  case -1:
+  if (res < 0)
     Result = MR_GMP_LT;
-    break;
-  case 0:
+  else if (res == 0)
     Result = MR_GMP_EQ;
-    break;
-  case 1:
+  else
     Result = MR_GMP_GT;
-    break;
-  }
 ").
 
 :- pragma foreign_proc("C",
