@@ -37,6 +37,7 @@
 :- pred is_odd(gmp_int::in) is semidet.
 :- pred is_negative(gmp_int::in) is semidet.
 :- pred is_zero(gmp_int::in) is semidet.
+:- pred is_positive(gmp_int::in) is semidet.
 
 :- func gcd(gmp_int, gmp_int) = gmp_int.
 :- func lcm(gmp_int, gmp_int) = gmp_int.
@@ -125,27 +126,18 @@ static mpz_t constant_ten;
   mpz_init_set_si(constant_ten, 10);
 ").
 
-gmp_int(Value) = Res :- gmp_init(Value, Res).
-
-:- pred gmp_init(int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_init(Value::in, Gmp_Int::out),
+                      gmp_int(Value::in) = (Gmp_Int::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *new_val;
-  new_val = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init_set_si(*new_val, Value);
-  Gmp_Int = new_val;
+  Gmp_Int = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init_set_si(*Gmp_Int, Value);
 ").
 
 to_string(Value) = to_base_string(Value, 10).
 
-to_base_string(Value, Base) = Res :-
-    gmp_to_base_string(Value, Base, Res).
-
-:- pred gmp_to_base_string(gmp_int::in, int::in, string::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_to_base_string(A::in, R::in, S::out),
+                      to_base_string(A::in, R::in) = (S::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
   S = mpz_get_str(NULL, R, *A);
@@ -175,168 +167,157 @@ det_from_base_string(Value, Base) = Res :-
 
 equal(A, B) :- cmp((=), A, B).
 
-cmp(CMP, A, B) :-
-    gmp_cmp(Result, A, B),
-    ( Result < 0 ->
-        CMP = (<)
-    ; Result = 0 ->
-        CMP = (=)
-    ;
-        CMP = (>)
-    ).
+:- pragma foreign_export_enum("C", comparison_result/0, [],
+                             [
+                              (<) - "MR_GMP_LT",
+                              (=) - "MR_GMP_EQ",
+                              (>) - "MR_GMP_GT"
+                             ]).
 
-:- pred gmp_cmp(int::out, gmp_int::in, gmp_int::in) is det.
 :- pragma foreign_proc("C",
-                      gmp_cmp(Result::out, A::in, B::in),
+                      cmp(Result::uo, A::in, B::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  Result = mpz_cmp(*A, *B);
+  int res;
+  res = mpz_cmp(*A, *B);
+  switch(res) {
+  case -1:
+    Result = MR_GMP_LT;
+    break;
+  case 0:
+    Result = MR_GMP_EQ;
+    break;
+  case 1:
+    Result = MR_GMP_GT;
+    break;
+  }
 ").
 
-A + B = C :- gmp_add(A, B, C).
-
-:- pred gmp_add(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_add(A::in, B::in, C::out),
+                      +(A::in, B::in) = (C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *new_val;
-  new_val = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*new_val);
-  mpz_add(*new_val, *A, *B);
-  C = new_val;
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_add(*C, *A, *B);
 ").
 
-A - B = C :- gmp_sub(A, B, C).
-
-:- pred gmp_sub(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_sub(A::in, B::in, C::out),
+                      -(A::in, B::in) = (C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *new_val;
-  new_val = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*new_val);
-  mpz_sub(*new_val, *A, *B);
-  C = new_val;
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_sub(*C, *A, *B);
 ").
 
-A * B = C :- gmp_mul(A, B, C).
-
-:- pred gmp_mul(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_mul(A::in, B::in, C::out),
+                      *(A::in, B::in) = (C::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *new_val;
-  new_val = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*new_val);
-  mpz_mul(*new_val, *A, *B);
-  C = new_val;
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_mul(*C, *A, *B);
 ").
 
-A // B = C :- gmp_tdiv(A, B, C, _).
-A rem B = C :- gmp_tdiv(A, B, _, C).
-divide_with_rem(A, B, Quot, Rem) :- gmp_tdiv(A, B, Quot, Rem).
-
-:- pred gmp_tdiv(gmp_int::in, gmp_int::in, gmp_int::out, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_tdiv(A::in, B::in, Q::out, R::out),
+                      //(A::in, B::in) = (Q::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *quot, *rem;
-  quot = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  rem  = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*quot);
-  mpz_init(*rem);
-  mpz_tdiv_qr(*quot, *rem, *A, *B);
-  Q = quot;
-  R = rem;
+  Q = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*Q);
+  mpz_tdiv_q(*Q, *A, *B);
 ").
 
-A div B = C :- gmp_fdiv(A, B, C, _).
-A mod B = C :- gmp_fdiv(A, B, _, C).
-divide_with_mod(A, B, Div, Mod) :- gmp_fdiv(A, B, Div, Mod).
-
-:- pred gmp_fdiv(gmp_int::in, gmp_int::in, gmp_int::out, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_fdiv(A::in, B::in, D::out, M::out),
+                      rem(A::in, B::in) = (Q::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *div, *mod;
-  div = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mod = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*div);
-  mpz_init(*mod);
-  mpz_fdiv_qr(*div, *mod, *A, *B);
-  D = div;
-  M = mod;
+  Q = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*Q);
+  mpz_tdiv_r(*Q, *A, *B);
 ").
 
-A /\ B = Res :- gmp_and(A, B, Res).
-
-:- pred gmp_and(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_and(A::in, B::in, C::out),
+                      divide_with_rem(A::in, B::in, Q::out, R::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_and(*result, *A, *B);
-  C = result;
+  Q = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  R  = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*Q);
+  mpz_init(*R);
+  mpz_tdiv_qr(*Q, *R, *A, *B);
 ").
 
-A \/ B = Res :- gmp_or(A, B, Res).
-
-:- pred gmp_or(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_or(A::in, B::in, C::out),
+                      div(A::in, B::in) = (D::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_ior(*result, *A, *B);
-  C = result;
+  D = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*D);
+  mpz_fdiv_q(*D, *A, *B);
 ").
 
-xor(A, B) = Res :- gmp_xor(A, B, Res).
-
-:- pred gmp_xor(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_xor(A::in, B::in, C::out),
+                      mod(A::in, B::in) = (D::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_xor(*result, *A, *B);
-  C = result;
+  D = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*D);
+  mpz_fdiv_r(*D, *A, *B);
 ").
 
-\ A = Res :- gmp_com(A, Res).
-
-:- pred gmp_com(gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_com(A::in, C::out),
+                      divide_with_mod(A::in, B::in, D::out, M::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_com(*result, *A);
-  C = result;
+  D = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  M = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*D);
+  mpz_init(*M);
+  mpz_fdiv_qr(*D, *M, *A, *B);
+").
+
+:- pragma foreign_proc("C",
+                      /\(A::in, B::in) = (C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_and(*C, *A, *B);
+").
+
+:- pragma foreign_proc("C",
+                      \/(A::in, B::in) = (C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_ior(*C, *A, *B);
+").
+
+:- pragma foreign_proc("C",
+                      xor(A::in, B::in) = (C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_xor(*C, *A, *B);
+").
+
+:- pragma foreign_proc("C",
+                      \(A::in) = (C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_com(*C, *A);
 ").
 
 A < B :- cmp((<), A, B).
 A > B :- cmp((>), A, B).
-A =< B :-
-    cmp(CMP, A, B),
-    ( CMP = (=); CMP = (<)).
-A >= B :-
-    cmp(CMP, A, B),
-    ( CMP = (=); CMP = (>)).
+A =< B :- \+ cmp((>), A, B).
+A >= B :- \+ cmp((<), A, B).
 
 :- pragma foreign_proc("C",
                       is_even(A::in),
@@ -352,50 +333,52 @@ A >= B :-
   SUCCESS_INDICATOR = mpz_odd_p(*A) ? MR_TRUE : MR_FALSE;
 ").
 
-is_negative(A) :- A < zero.
-
-is_zero(A) :- A = zero.
-
-gcd(A, B) = GCD :- gmp_gcd(A, B, GCD).
-
-:- pred gmp_gcd(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_gcd(A::in, B::in, C::out),
+                      is_negative(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_gcd(*result, *A, *B);
-  C = result;
+  SUCCESS_INDICATOR = (mpz_sgn(*A) == -1) ? MR_TRUE : MR_FALSE;
 ").
 
-lcm(A, B) = GCD :- gmp_lcm(A, B, GCD).
-
-:- pred gmp_lcm(gmp_int::in, gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_lcm(A::in, B::in, C::out),
+                      is_zero(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_lcm(*result, *A, *B);
-  C = result;
+  SUCCESS_INDICATOR = (mpz_sgn(*A) == 0) ? MR_TRUE : MR_FALSE;
 ").
 
-abs(A) = B :- gmp_abs(A, B).
-
-:- pred gmp_abs(gmp_int::in, gmp_int::out) is det.
 :- pragma foreign_proc("C",
-                      gmp_abs(A::in, B::out),
+                      is_positive(A::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_abs(*result, *A);
-  B = result;
+  SUCCESS_INDICATOR = (mpz_sgn(*A) == 1) ? MR_TRUE : MR_FALSE;
+").
+
+:- pragma foreign_proc("C",
+                      gcd(A::in, B::in) = (C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_gcd(*C, *A, *B);
+").
+
+:- pragma foreign_proc("C",
+                      lcm(A::in, B::in) = (C::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  C = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*C);
+  mpz_lcm(*C, *A, *B);
+").
+
+:- pragma foreign_proc("C",
+                      abs(A::in) = (B::out),
+                      [will_not_call_mercury, promise_pure, thread_safe],
+"
+  B = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*B);
+  mpz_abs(*B, *A);
 ").
 
 pow(A, N) = Res :-
@@ -420,11 +403,9 @@ pow2(A, N) = Res :-
                       powm(Base::in, Exp::in, Mod::in) = (Res::out),
                       [will_not_call_mercury, promise_pure, thread_safe],
 "
-  mpz_t *result;
-  result = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
-  mpz_init(*result);
-  mpz_powm(*result, *Base, *Exp, *Mod);
-  Res = result;
+  Res = MR_GC_NEW_ATTRIB(mpz_t, MR_ALLOC_ID);
+  mpz_init(*Res);
+  mpz_powm(*Res, *Base, *Exp, *Mod);
 ").
 
 :- pragma foreign_proc("C",
