@@ -167,13 +167,6 @@ det_from_base_string(Value, Base) = Res :-
 
 equal(A, B) :- cmp((=), A, B).
 
-:- pragma foreign_export_enum("C", comparison_result/0, [],
-                             [
-                              (<) - "MR_GMP_LT",
-                              (=) - "MR_GMP_EQ",
-                              (>) - "MR_GMP_GT"
-                             ]).
-
 :- pragma foreign_proc("C",
                       cmp(Result::uo, A::in, B::in),
                       [will_not_call_mercury, promise_pure, thread_safe],
@@ -181,11 +174,11 @@ equal(A, B) :- cmp((=), A, B).
   int res;
   res = mpz_cmp(*A, *B);
   if (res < 0)
-    Result = MR_GMP_LT;
-  else if (res == 0)
-    Result = MR_GMP_EQ;
+    Result = MR_COMPARE_LESS;
+  else if (res > 0)
+    Result = MR_COMPARE_GREATER;
   else
-    Result = MR_GMP_GT;
+    Result = MR_COMPARE_EQUAL;
 ").
 
 :- pragma foreign_proc("C",
