@@ -51,8 +51,10 @@ should work.
 ## Benchmark
 
 For heavy number crunching code on bignums, first benchmarks show that
-Mercury-GMP is 2x faster than SWI and 15% faster than YAP (both using
-GMP).
+Mercury-GMP is 2.15 -- 2.4x faster than SWI and 1.2 -- 1.3x faster than YAP
+(both using GMP) and around 1.35x -- 1.15x slower than Haskell (depeding on
+dynamic or static linking).
+
 
 For a Miller-Rabin test, Mercury-GMP was more than two orders of magnitude
 faster than using `integer.m` from the standard library. It is between 2 to 6
