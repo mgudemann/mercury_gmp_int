@@ -300,7 +300,7 @@
     % We assume unsigned long long to be at least as big as MR_Integer.
     % This is currently required for the to_int predicates.
     %
-:- pragma foreign_type("C", gmp_int, "mpz_t *")
+:- pragma foreign_type("C", gmp_int, "mpz_t *", [can_pass_as_mercury_type])
     where equality is equal, comparison is cmp.
 :- pragma foreign_decl("C",
 "\
