@@ -70,13 +70,13 @@
 
     % Shift Left.
     %
-:- func '<<'(gmp_int, int) = gmp_int.
+:- func <<(gmp_int, int) = gmp_int.
 
     % Shift Right.
     %
     % This is implemented as truncating division with 2^N.
     %
-:- func '>>'(gmp_int, int) = gmp_int.
+:- func >>(gmp_int, int) = gmp_int.
 
     % Absolute value.
     %
@@ -346,12 +346,24 @@ gmp_int_free_function(void* ptr, size_t size)
 void* gmp_int_alloc_function(size_t);
 void* gmp_int_realloc_function(void*, size_t, size_t);
 void  gmp_int_free_function(void*, size_t);
+").
 
-static mpz_t constant_negative_one;
-static mpz_t constant_zero;
-static mpz_t constant_one;
-static mpz_t constant_two;
-static mpz_t constant_ten;
+:- pragma foreign_decl("C",
+"
+extern mpz_t GMP_INT_constant_negative_one;
+extern mpz_t GMP_INT_constant_zero;
+extern mpz_t GMP_INT_constant_one;
+extern mpz_t GMP_INT_constant_two;
+extern mpz_t GMP_INT_constant_ten;
+").
+
+:- pragma foreign_decl("C",
+"
+mpz_t GMP_INT_constant_negative_one;
+mpz_t GMP_INT_constant_zero;
+mpz_t GMP_INT_constant_one;
+mpz_t GMP_INT_constant_two;
+mpz_t GMP_INT_constant_ten;
 ").
 
 :- pragma foreign_proc("C",
@@ -361,11 +373,11 @@ static mpz_t constant_ten;
   mp_set_memory_functions(&gmp_int_alloc_function,
                           &gmp_int_realloc_function,
                           &gmp_int_free_function);
-  mpz_init_set_si(constant_negative_one, -1);
-  mpz_init_set_si(constant_zero, 0);
-  mpz_init_set_si(constant_one, 1);
-  mpz_init_set_si(constant_two, 2);
-  mpz_init_set_si(constant_ten, 10);
+  mpz_init_set_si(GMP_INT_constant_negative_one, -1);
+  mpz_init_set_si(GMP_INT_constant_zero, 0);
+  mpz_init_set_si(GMP_INT_constant_one, 1);
+  mpz_init_set_si(GMP_INT_constant_two, 2);
+  mpz_init_set_si(GMP_INT_constant_ten, 10);
 ").
 
 %---------------------------------------------------------------------------%
@@ -854,7 +866,7 @@ pow2(A, N) = Res :-
     negative_one = (Res::out),
     [will_not_call_mercury, promise_pure, thread_safe],
 "
-  Res = &constant_negative_one;
+  Res = &GMP_INT_constant_negative_one;
 "
 ).
 
@@ -862,7 +874,7 @@ pow2(A, N) = Res :-
     zero = (Res::out),
     [will_not_call_mercury, promise_pure, thread_safe],
 "
-  Res = &constant_zero;
+  Res = &GMP_INT_constant_zero;
 "
 ).
 
@@ -870,7 +882,7 @@ pow2(A, N) = Res :-
     one = (Res::out),
     [will_not_call_mercury, promise_pure, thread_safe],
 "
-  Res = &constant_one;
+  Res = &GMP_INT_constant_one;
 "
 ).
 
@@ -878,7 +890,7 @@ pow2(A, N) = Res :-
     two = (Res::out),
     [will_not_call_mercury, promise_pure, thread_safe],
 "
-  Res = &constant_two;
+  Res = &GMP_INT_constant_two;
 "
 ).
 
@@ -886,7 +898,7 @@ pow2(A, N) = Res :-
     ten = (Res::out),
     [will_not_call_mercury, promise_pure, thread_safe],
 "
-  Res = &constant_ten;
+  Res = &GMP_INT_constant_ten;
 "
 ).
 

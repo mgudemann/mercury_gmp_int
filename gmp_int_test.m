@@ -65,10 +65,10 @@ main(!IO) :-
     ;
         io.print(">=", !IO)
     ),
-    io.nl(!IO),
     SL = A << 3,
-    SR = Large >> 10,
+    nl(!IO),
     N = det_to_int(A),
+    SR = Large >> 10,
     NEG_A = -A `with_type` gmp_int,
     io.format("%s << 3 = %s\n%s >> 10 = %s\nA as signed long: %d\nnegative A = %s\n",
               [s(AS), s(to_string(SL)),
