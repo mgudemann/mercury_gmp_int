@@ -341,7 +341,7 @@ gmp_int_free_function(void* ptr, size_t size)
 }
 ").
 
-:- pragma foreign_decl("C", local,
+:- pragma foreign_decl("C",
 "
 void* gmp_int_alloc_function(size_t);
 void* gmp_int_realloc_function(void*, size_t, size_t);
@@ -357,7 +357,7 @@ extern mpz_t GMP_INT_constant_two;
 extern mpz_t GMP_INT_constant_ten;
 ").
 
-:- pragma foreign_decl("C",
+:- pragma foreign_code("C",
 "
 mpz_t GMP_INT_constant_negative_one;
 mpz_t GMP_INT_constant_zero;
